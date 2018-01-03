@@ -1,0 +1,147 @@
+<!-- Cadastro de cliente via Radius
+     Juliano R. dos Santos 20170830
+     Versão 1.0 - Criação de campos para coleta de informação via POST html
+     Versao 1.1 - Integração do PHP com MySql
+     Versao 1.2 - Insercao de clientes no MySql via PHP
+     Versao 1.3 - Insercao de imagem de background
+	Versao 1.3.1 - Correção de bug na inserção da imagem de background (working)
+	Versao 1.3.2 - Ajustados comentários, acrescentado testes de validação dos campos
+	Versao 1.3.3 - Adicionados Planos residenciais
+	Versao 1.3.4 - Ajustados checkbox
+	Versao 1.3.5 - Criação de tabelas
+	Versao 1.3.6 - Correção de bug na inserção da imagem de background (fixed)
+     Versao 1.4 - Cadastro de planos no banco de dados com erro (working)
+	Versao 1.4.1 -
+-->
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Cadastro de Cliente Radius</title>
+	</head>
+
+<!--	<body backgroud="background.png"> -->
+	<body>
+		<center><h1>Cadastro de Cliente - Radius</h1></center>
+		<hr>
+		<form action="http://187.85.132.121/" method="post">
+			<table border="0">
+				<tr>
+					<td>Nome:</td>
+					<td><input type="text" name="nome"></td>
+				</tr>
+				<tr>
+					<td>Usuario:</td>
+					<td><input type="text" name="usuario"></td>
+				</tr>
+				<tr>
+					<td>Senha:</td>
+					<td><input type="text" name="senha"></td>
+				</tr>
+				<tr>
+					<td>Plano:</td>
+					<td><select name="plano">
+						<option value="--Selecione--" name="sel">Selecione</option>
+						<option value="Residencial - 1Mb" name="r1">Residencial - 1Mb</option>
+						<option value="Residencial - 3Mb" name="r3">Residencial - 3Mb</option>
+						<option value="Residencial - 5Mb" name="r5">Residencial - 5Mb</option>
+						<option value="Residencial - 10Mb" name="r10">Residencial - 10Mb</option>
+						<option value="Residencial - 15Mb" name="r15">Residencial - 15Mb</option>
+						<option value="Residencial - 20Mb" name="r20">Residencial - 20Mb</option>
+						<option value="Residencial - 30Mb" name="r30">Residencial - 30Mb</option>
+						<option value="Residencial - 40Mb" name="r40">Residencial - 40Mb</option>
+						<option value="Residencial - 50Mb" name="r50">Residencial - 50Mb</option>
+						<option value="Residencial - 100Mb" name="r100">Residencial - 100Mb</option>
+					   </select></td>
+				</tr>
+				<tr>
+					<td>MAC:</td>
+					<td><input type="text" name="mac"></td>
+				</tr>
+				<tr>
+					<td>IP Valido:</td>
+					<td><input type="text" name="ip_valido"></td>
+					<td>Sim <input type="checkbox" name="sim" value="sim"></td>
+					<td>Não <input type="checkbox" name="não" value="nao"></td>
+				</tr>
+				<tr>
+					<td><input type="submit" value="Gravar"></td>
+				</tr>
+			</table>
+		</form>
+		<hr>
+	<?php
+//Declaração de variáveis para conexão ao banco de dados
+		$server = "187.85.132.121";
+		$username = "root";
+		$password = "g2netsulg2@";
+		$database = "radius";
+
+
+//Cria conexão com o banco de dados
+		$conn = new mysqli($server, $username, $password, $database);
+
+//Testa conexão com o banco de dados
+		if ($conn -> connect_error) {
+			die("Conexao ao banco de dados falhou!: <br>". $conn -> connect_error);
+		}
+		echo "Conectado a database -  $database - <br>" ;
+
+//Testa conexão com o banco trazendo a tabela NAS
+		$sql = "SELECT nasname, server FROM nas";
+		$result = mysqli_query($conn, $sql);
+		echo "Processing <br>" ;
+		if (mysqli_num_rows($result) > 0){
+			while($row = mysqli_fetch_assoc($result)){
+				echo "Nasname: " . $row["nasname"]. "<br>" . "Server: " . $row["server"]."<br>";
+			}
+		} else{
+			echo "0 Results <br>";
+		}
+
+//Declaração de variáveis
+		$usuario = $_POST["usuario"];
+		$senha = $_POST["senha"];
+		$nome = $_POST["nome"];
+		$plano = $_POST["plano"];
+		$mac = $_POST["mac"];
+		$ip_valido = $_POST["ip_valido"];
+		$sel = $_POST["sel"];
+
+//Insere um novo cliente no banco de dados
+		if (empty($usuario) == true) {
+			echo "Campo USUARIO em branco, inserir dados corretamente<br>";
+			$erro = 1;
+		}else {
+			if (empty($senha) == true){
+				echo "Campo SENHA em branco, inserir dados corretamente<br>";
+				$erro = 1;
+			}else {
+				$sql = "INSERT INTO radcheck (username, attribute, op, value) VALUES ('$usuario', 'ClearText-Password', ':=', '$senha')";
+				echo "Cadastrado novo usuário [" . $usuario ."] no banco de dados!<br>";
+			}
+		echo "Teste, deveria ter inserido o cadastro no banco.!<br>";
+		}
+
+//Insere Plano do cliente
+/*		if ($plano == $sel) {
+			echo "Campo PLANO não foi definido, selecionr plano!<br>";
+			$erro = 1;
+		}else {
+			$sql = "INSERT INTO radusergroup (username, groupname) VALUES ('$usuario', '$plano')";
+			echo "Definido plano do cliente para: ". $plano . "<br>";
+		}
+ */
+//Finalização dos comandos
+		if (mysqli_query($conn, $sql)) {
+			echo "Dados gravados no banco de dados!<br>";
+		}else{
+			echo "Erro na gravacao no banco de dados!  - " . $sql . "<br>" . mysqli_error($conn);
+		}
+		mysqli_close($conn);
+		echo  "Encerrando conexão com banco de dados<br>";
+	?>
+	<hr>
+	</body>
+</html>
